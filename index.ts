@@ -83,7 +83,7 @@ flimRouter.post('/', ...insertFlimValidator, async (ctx: RouterContext, next: an
 
 const customIdCheckingValidator: CustomValidatorFunction = async (input: unknown): Promise<void> => {
     const target = flims.find(flim => flim.id == input);
-    if(!target) {
+    if (!target) {
         throw customIdErrorMessage;
     }
 };
@@ -139,6 +139,18 @@ app.use(logger());
 app.use(bodyParser());
 app.use(router.routes()).use(router.allowedMethods());
 app.use(flimRouter.routes()).use(router.allowedMethods());
+
+app.use(async (ctx: RouterContext, next: any) => {
+    try {
+        await next();
+        if (ctx.status === 404) {
+            ctx.status = 404;
+            ctx.body = { err: "No such endpoint existed" };
+        }
+    } catch (err: any) {
+        ctx.body = { err: err };
+    }
+})
 
 app.listen(10888, () => {
     console.log("Koa Started");
